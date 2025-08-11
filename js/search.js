@@ -638,8 +638,11 @@ function createItemDetailHTML(item) {
 
 // Claim item
 function claimItem(itemId) {
-    if (!window.Auth?.isLoggedIn()) {
+    if (!window.Auth || !window.Auth.isLoggedIn()) {
         window.ModalManager?.openModal('loginModal');
+        if (window.CanBeFound) {
+            window.CanBeFound.showNotification('Please log in to claim an item', 'info');
+        }
         return;
     }
     

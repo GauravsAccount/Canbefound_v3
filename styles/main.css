@@ -516,6 +516,18 @@ img {
   }
 }
 
+/* College ID Display */
+.college-id-display {
+  cursor: default !important;
+  opacity: 0.8;
+  font-weight: var(--font-weight-semibold);
+}
+
+.college-id-display:hover {
+  transform: none !important;
+  background: var(--gray-200) !important;
+}
+
 /* Focus Management */
 .focus-visible:focus-visible {
   outline: 2px solid var(--focus-color);

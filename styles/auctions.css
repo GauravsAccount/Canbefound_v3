@@ -482,6 +482,93 @@
   justify-content: center;
 }
 
+/* Auction Detail Modal Styles */
+.auction-detail-header {
+  display: flex;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+}
+
+.auction-detail-image {
+  width: 200px;
+  height: 200px;
+  background: var(--gray-100);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.auction-detail-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.auction-detail-info {
+  flex: 1;
+}
+
+.auction-detail-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-color);
+}
+
+.auction-detail-meta {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.meta-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-light);
+}
+
+.meta-value {
+  color: var(--text-color);
+  font-weight: var(--font-weight-semibold);
+}
+
+.auction-detail-description {
+  background: var(--gray-100);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.auction-detail-description h4 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-color);
+  margin-bottom: var(--spacing-sm);
+}
+
+.auction-detail-description p {
+  color: var(--text-light);
+  line-height: var(--line-height-relaxed);
+  margin: 0;
+}
+
+.auction-detail-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: center;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .filters-container {
@@ -523,6 +610,20 @@
   }
   
   .bid-actions {
+    flex-direction: column;
+  }
+  
+  .auction-detail-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .auction-detail-meta {
+    grid-template-columns: 1fr;
+  }
+  
+  .auction-detail-actions {
     flex-direction: column;
   }
 }
