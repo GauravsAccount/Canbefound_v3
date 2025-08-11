@@ -19,7 +19,7 @@
         <aside class="admin-sidebar" id="adminSidebar">
             <div class="sidebar-header">
                 <div class="logo">
-                    <span class="logo-text">CanBeFound</span>
+                    <span class="logo-text">Can</span><span class="logo-domain">BeFound</span>
                     <span class="logo-subtitle">Admin</span>
                 </div>
                 <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
@@ -170,6 +170,7 @@
                                 <th>Item Name</th>
                                 <th>Category</th>
                                 <th>Status</th>
+                                <th>Approval</th>
                                 <th>Date Reported</th>
                                 <th>Location</th>
                                 <th>Actions</th>
@@ -330,7 +331,35 @@
         </div>
     </div>
 
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal" role="dialog" aria-labelledby="login-title" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="login-title" class="modal-title">Admin Login</h2>
+                <button class="modal-close" aria-label="Close login modal">&times;</button>
+            </div>
+            <form class="modal-body" id="loginForm">
+                <div class="form-group">
+                    <label for="collegeId" class="form-label">College ID</label>
+                    <input type="text" id="collegeId" name="collegeId" class="form-input" required 
+                           aria-describedby="college-id-help">
+                    <small id="college-id-help" class="form-help">Enter your admin ID</small>
+                </div>
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" name="password" class="form-input" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-full">Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <script src="js/main.js"></script>
+    <script src="js/accessibility.js"></script>
+    <script src="js/modals.js"></script>
+    <script src="js/auth.js"></script>
     <script src="js/admin.js"></script>
+    <script src="api-client.js"></script>
 </body>
 </html>

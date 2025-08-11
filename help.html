@@ -476,8 +476,75 @@
         </div>
     </footer>
 
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal" role="dialog" aria-labelledby="login-title" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="login-title" class="modal-title">Student Login</h2>
+                <button class="modal-close" aria-label="Close login modal">&times;</button>
+            </div>
+            <form class="modal-body" id="loginForm">
+                <div class="form-group">
+                    <label for="collegeId" class="form-label">College ID</label>
+                    <input type="text" id="collegeId" name="collegeId" class="form-input" required 
+                           aria-describedby="college-id-help">
+                    <small id="college-id-help" class="form-help">Enter your student or staff ID</small>
+                </div>
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" name="password" class="form-input" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-full">Login</button>
+                    <a href="#" class="forgot-password">Forgot Password?</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div class="modal" id="signupModal" role="dialog" aria-labelledby="signup-title" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="signup-title" class="modal-title">Create Account</h2>
+                <button class="modal-close" aria-label="Close signup modal">&times;</button>
+            </div>
+            <form class="modal-body" id="signupForm">
+                <div class="form-group">
+                    <label for="signupName" class="form-label">Full Name</label>
+                    <input type="text" id="signupName" name="name" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail" class="form-label">College Email</label>
+                    <input type="email" id="signupEmail" name="email" class="form-input" required 
+                           placeholder="yourname@college.edu">
+                    <small class="form-help">Must be a valid college email address</small>
+                </div>
+                <div class="form-group">
+                    <label for="signupCollegeId" class="form-label">College ID</label>
+                    <input type="text" id="signupCollegeId" name="collegeId" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword" class="form-label">Password</label>
+                    <input type="password" id="signupPassword" name="password" class="form-input" required 
+                           minlength="6">
+                    <small class="form-help">At least 6 characters</small>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword" class="form-label">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-input" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+                    <p class="form-help">Already have an account? <a href="#" onclick="window.ModalManager?.closeModal('signupModal'); window.ModalManager?.openModal('loginModal');">Login here</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
     <script src="js/main.js"></script>
     <script src="js/accessibility.js"></script>
+    <script src="js/modals.js"></script>
+    <script src="js/auth.js"></script>
     <script src="js/help.js"></script>
     <script src="api-client.js"></script>
     <script src="js/api-integration.js"></script>

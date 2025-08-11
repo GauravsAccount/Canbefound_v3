@@ -196,10 +196,13 @@ async function loadRecentItemsFromAPI() {
   try {
     const items = await window.API.getRecentItems(8);
     
-    if (items && items.length > 0) {
-      container.innerHTML = items.map(item => createItemCard(item)).join('');
+    // Filter for approved items only
+    const approvedItems = items.filter(item => item.approved !== false);
+    
+    if (approvedItems && approvedItems.length > 0) {
+      container.innerHTML = approvedItems.map(item => createItemCard(item)).join('');
     } else {
-      container.innerHTML = '<p class="no-items">No recent items found.</p>';
+      container.innerHTML = '<p class="no-items">No recent approved items found.</p>';
     }
     
   } catch (error) {
@@ -211,37 +214,57 @@ async function loadRecentItemsFromAPI() {
 // Perform real search
 async function performRealSearch() {
   const searchInput = document.getElementById('searchInput');
-  if (!searchInput) return;
+  if (searchInput) {
+    searchState.query = searchInput.value.trim();
+  }
   
-  const query = searchInput.value.trim();
+  // Update filters
+  updateFilters();
   
   // Show loading state
-  if (window.SearchManager) {
-    showLoadingState();
-  }
+  showLoadingState();
   
   try {
     // Get filter values
     const filters = {
-      search: query,
-      category: document.getElementById('categoryFilter')?.value || '',
-      location: document.getElementById('locationFilter')?.value || '',
-      status: document.getElementById('statusFilter')?.value || '',
-      limit: 20,
-      offset: 0,
+      search: searchState.query,
+      category: searchState.filters.category,
+      location: searchState.filters.location,
+      status: searchState.filters.status,
+      limit: searchState.itemsPerPage,
+      offset: (searchState.currentPage - 1) * searchState.itemsPerPage,
+      approved: true // Only show approved items
     };
+    
+    // Remove empty filters
+    Object.keys(filters).forEach(key => {
+      if (!filters[key] && key !== 'approved') {
+        delete filters[key];
+      }
+    });
     
     const items = await window.API.getAllItems(filters);
     
+    // Filter for approved items only (client-side backup)
+    const approvedItems = items.filter(item => item.approved !== false);
+    
+    // Sort items locally
+    const sortedItems = sortItems(approvedItems);
+    
     // Display items
-    if (window.SearchManager) {
-      displayItems(items);
-      updateResultsInfo(items.length);
-    }
+    displayItems(sortedItems);
+    updateResultsInfo(sortedItems.length);
+    
+    // Update URL
+    updateURL();
     
   } catch (error) {
     console.error('Search failed:', error);
     showErrorMessage('Search failed. Please try again.');
+    
+    // Hide loading state
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    if (loadingSpinner) loadingSpinner.style.display = 'none';
   }
 }
 
@@ -304,6 +327,42 @@ function animateCounterToValue(element, targetValue) {
 function overrideAuthenticationFunctions() {
   // Auth functions are now handled by auth.js
   console.log('Authentication functions delegated to auth.js');
+}
+
+// Load real auction data from API
+async function loadRealAuctionData() {
+    try {
+        const auctions = await window.API.getAuctions();
+        
+        // Transform API data to match expected format
+        auctionState.auctions = auctions.map(auction => ({
+            id: auction.id,
+            title: auction.title || auction.item?.itemName || 'Untitled Item',
+            category: auction.item?.category || 'other',
+            description: auction.description || auction.item?.description || '',
+            image: auction.item?.photo?.url || 'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=400',
+            startingPrice: auction.startingPrice / 100, // Convert cents to dollars
+            currentBid: (auction.currentBid || auction.startingPrice) / 100,
+            bidCount: auction.bidCount || 0,
+            endTime: new Date(auction.endTime),
+            status: auction.status === 'active' ? 'active' : auction.status,
+            location: auction.item?.location || 'Unknown'
+        }));
+        
+        // Display auctions
+        filterAndDisplayAuctions();
+        
+    } catch (error) {
+        console.error('Failed to load auction data:', error);
+        
+        // Fallback to mock data
+        generateMockAuctions();
+        filterAndDisplayAuctions();
+        
+        if (window.CanBeFound) {
+            window.CanBeFound.showNotification('Using demo auction data', 'info');
+        }
+    }
 }
 
 // Utility functions

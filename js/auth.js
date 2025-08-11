@@ -41,8 +41,16 @@ async function handleLogin(e) {
   e.preventDefault();
   
   const form = e.target;
-  const collegeId = form.collegeId.value.trim();
-  const password = form.password.value;
+  const collegeIdInput = form.collegeId || form.querySelector('[name="collegeId"]') || form.querySelector('#collegeId');
+  const passwordInput = form.password || form.querySelector('[name="password"]') || form.querySelector('#password');
+  
+  if (!collegeIdInput || !passwordInput) {
+    showLoginError('Login form fields not found');
+    return;
+  }
+  
+  const collegeId = collegeIdInput.value.trim();
+  const password = passwordInput.value;
   const submitBtn = form.querySelector('button[type="submit"]');
   const originalText = submitBtn.textContent;
   
@@ -108,11 +116,22 @@ async function handleSignup(e) {
   e.preventDefault();
   
   const form = e.target;
-  const name = form.name.value.trim();
-  const email = form.email.value.trim();
-  const collegeId = form.collegeId.value.trim();
-  const password = form.password.value;
-  const confirmPassword = form.confirmPassword.value;
+  const nameInput = form.name || form.querySelector('[name="name"]') || form.querySelector('#signupName');
+  const emailInput = form.email || form.querySelector('[name="email"]') || form.querySelector('#signupEmail');
+  const collegeIdInput = form.collegeId || form.querySelector('[name="collegeId"]') || form.querySelector('#signupCollegeId');
+  const passwordInput = form.password || form.querySelector('[name="password"]') || form.querySelector('#signupPassword');
+  const confirmPasswordInput = form.confirmPassword || form.querySelector('[name="confirmPassword"]') || form.querySelector('#confirmPassword');
+  
+  if (!nameInput || !emailInput || !collegeIdInput || !passwordInput || !confirmPasswordInput) {
+    showSignupError('Signup form fields not found');
+    return;
+  }
+  
+  const name = nameInput.value.trim();
+  const email = emailInput.value.trim();
+  const collegeId = collegeIdInput.value.trim();
+  const password = passwordInput.value;
+  const confirmPassword = confirmPasswordInput.value;
   const submitBtn = form.querySelector('button[type="submit"]');
   const originalText = submitBtn.textContent;
   
@@ -239,25 +258,29 @@ function updateAuthUI() {
   const signupBtn = document.getElementById('signupBtn');
   
   if (authState.isLoggedIn && authState.currentUser) {
-    // Update login button to show user name
+    // Replace login/signup buttons with college ID display
     if (loginBtn) {
-      loginBtn.textContent = authState.currentUser.name || 'Profile';
-      loginBtn.onclick = () => {
-        // Create user menu dropdown
-        showUserMenu();
-      };
+      loginBtn.textContent = authState.currentUser.collegeId || authState.currentUser.name;
+      loginBtn.className = 'btn btn-outline college-id-display';
+      loginBtn.style.cursor = 'default';
+      loginBtn.onclick = null;
+      loginBtn.disabled = true;
     }
     
-    // Update signup button to logout
+    // Replace signup button with logout
     if (signupBtn) {
       signupBtn.textContent = 'Logout';
       signupBtn.onclick = handleLogout;
-      signupBtn.className = 'btn btn-outline';
+      signupBtn.className = 'btn btn-secondary';
+      signupBtn.disabled = false;
     }
   } else {
     // Reset to default state
     if (loginBtn) {
       loginBtn.textContent = 'Login';
+      loginBtn.className = 'btn btn-secondary';
+      loginBtn.style.cursor = 'pointer';
+      loginBtn.disabled = false;
       loginBtn.onclick = () => {
         if (window.ModalManager) {
           window.ModalManager.openModal('loginModal');
@@ -273,6 +296,7 @@ function updateAuthUI() {
         }
       };
       signupBtn.className = 'btn btn-primary';
+      signupBtn.disabled = false;
     }
   }
 }

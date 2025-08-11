@@ -472,8 +472,11 @@ function initializeBidModal() {
 
 // Open bid modal
 function openBidModal(auction) {
-    if (!window.Auth?.isLoggedIn()) {
+    if (!window.Auth || !window.Auth.isLoggedIn()) {
         window.ModalManager?.openModal('loginModal');
+        if (window.CanBeFound) {
+            window.CanBeFound.showNotification('Please log in to place a bid', 'info');
+        }
         return;
     }
     
@@ -510,7 +513,7 @@ function openBidModal(auction) {
 }
 
 // Handle bid submission
-function handleBidSubmission() {
+async function handleBidSubmission() {
     const modal = document.getElementById('bidModal');
     const bidAmountInput = document.getElementById('bidAmount');
     const auctionId = modal?.getAttribute('data-auction-id');
@@ -541,8 +544,10 @@ function handleBidSubmission() {
     submitBtn.textContent = 'Placing Bid...';
     submitBtn.disabled = true;
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+        // Use API to place bid
+        await window.API.placeBid(auctionId, bidAmount);
+        
         // Update auction data
         auction.currentBid = bidAmount;
         auction.bidCount++;
@@ -558,11 +563,13 @@ function handleBidSubmission() {
         // Refresh display
         filterAndDisplayAuctions();
         
-        // Reset form
+    } catch (error) {
+        console.error('Failed to place bid:', error);
+        showBidError('Failed to place bid. Please try again.');
+    } finally {
         submitBtn.textContent = originalText;
         submitBtn.disabled = false;
-        
-    }, 1500);
+    }
 }
 
 // Show bid error
@@ -580,8 +587,124 @@ function showBidError(message) {
 
 // View auction details
 function viewAuctionDetails(auction) {
-    // In a real app, this would open a detailed view
-    console.log('Viewing auction details:', auction);
+    // Create detailed view modal
+    let detailModal = document.getElementById('auctionDetailModal');
+    if (!detailModal) {
+        createAuctionDetailModal();
+        detailModal = document.getElementById('auctionDetailModal');
+    }
+    
+    // Load auction details
+    loadAuctionDetailContent(auction);
+    
+    // Open modal
+    window.ModalManager?.openModal('auctionDetailModal');
+}
+
+// Create auction detail modal
+function createAuctionDetailModal() {
+    const modalHTML = `
+        <div class="modal" id="auctionDetailModal" role="dialog" aria-labelledby="auction-detail-title" aria-hidden="true">
+            <div class="modal-content large">
+                <div class="modal-header">
+                    <h2 id="auction-detail-title" class="modal-title">Auction Details</h2>
+                    <button class="modal-close" aria-label="Close auction details">&times;</button>
+                </div>
+                <div class="modal-body" id="auctionDetailBody">
+                    <!-- Auction details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Setup the new modal
+    const modal = document.getElementById('auctionDetailModal');
+    if (window.ModalManager && modal) {
+        const closeButtons = modal.querySelectorAll('.modal-close');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', () => window.ModalManager.closeModal('auctionDetailModal'));
+        });
+        
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                window.ModalManager.closeModal('auctionDetailModal');
+            }
+        });
+    }
+}
+
+// Load auction detail content
+function loadAuctionDetailContent(auction) {
+    const modalBody = document.getElementById('auctionDetailBody');
+    if (!modalBody) return;
+    
+    const timeLeft = getTimeLeft(auction.endTime);
+    const statusClass = auction.status === 'ending-soon' ? 'ending-soon' : 'active';
+    const categoryText = auction.category.charAt(0).toUpperCase() + auction.category.slice(1);
+    
+    modalBody.innerHTML = `
+        <div class="auction-detail-header">
+            <div class="auction-detail-image">
+                <img src="${auction.image}" alt="${auction.title}" loading="lazy">
+                <div class="auction-status ${statusClass}">${auction.status === 'ending-soon' ? 'Ending Soon' : 'Active'}</div>
+            </div>
+            <div class="auction-detail-info">
+                <h3 class="auction-detail-title">${auction.title}</h3>
+                <div class="auction-category">${categoryText}</div>
+                <div class="auction-detail-meta">
+                    <div class="meta-item">
+                        <div class="meta-label">Starting Price</div>
+                        <div class="meta-value">$${auction.startingPrice.toFixed(2)}</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Current Bid</div>
+                        <div class="meta-value">$${auction.currentBid.toFixed(2)}</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Total Bids</div>
+                        <div class="meta-value">${auction.bidCount}</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Time Remaining</div>
+                        <div class="meta-value">${timeLeft}</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Location Found</div>
+                        <div class="meta-value">${auction.location}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="auction-detail-description">
+            <h4>Description</h4>
+            <p>${auction.description}</p>
+        </div>
+        
+        <div class="auction-detail-actions">
+            <button class="btn btn-primary" onclick="window.ModalManager?.closeModal('auctionDetailModal'); window.AuctionManager?.openBidModal(${JSON.stringify(auction).replace(/"/g, '&quot;')})">
+                Place Bid
+            </button>
+            <button class="btn btn-secondary" onclick="window.ModalManager?.closeModal('auctionDetailModal')">Close</button>
+        </div>
+    `;
+}
+
+// Close auction detail modal
+function closeAuctionDetailModal() {
+    window.ModalManager?.closeModal('auctionDetailModal');
+}
+
+// Export updated auction functions
+window.AuctionManager = {
+    openBidModal,
+    closeBidModal,
+    viewAuctionDetails,
+    closeAuctionDetailModal
+};
+
     
     if (window.CanBeFound) {
         window.CanBeFound.showNotification('Auction details view would open here', 'info');

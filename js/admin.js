@@ -138,6 +138,156 @@ function initializeDashboardComponents() {
     
     // Settings forms
     initializeSettingsForms();
+    
+    // Bulk actions
+    initializeBulkActions();
+}
+
+// Initialize bulk actions
+function initializeBulkActions() {
+    const bulkActionsBtn = document.getElementById('bulkActionsBtn');
+    
+    if (bulkActionsBtn) {
+        bulkActionsBtn.addEventListener('click', function() {
+            // Create bulk actions dropdown
+            showBulkActionsMenu();
+        });
+    }
+}
+
+// Show bulk actions menu
+function showBulkActionsMenu() {
+    const existingMenu = document.getElementById('bulkActionsMenu');
+    if (existingMenu) {
+        existingMenu.remove();
+        return;
+    }
+    
+    const menu = document.createElement('div');
+    menu.id = 'bulkActionsMenu';
+    menu.className = 'bulk-actions-menu';
+    menu.innerHTML = `
+        <div class="bulk-menu-content">
+            <button class="bulk-menu-item" onclick="bulkApproveItems()">
+                <span class="menu-icon">✅</span>
+                <span>Approve Selected</span>
+            </button>
+            <button class="bulk-menu-item" onclick="bulkDeleteItems()">
+                <span class="menu-icon">🗑️</span>
+                <span>Delete Selected</span>
+            </button>
+            <button class="bulk-menu-item" onclick="exportSelectedItems()">
+                <span class="menu-icon">📄</span>
+                <span>Export Selected</span>
+            </button>
+        </div>
+    `;
+    
+    // Position menu
+    const bulkActionsBtn = document.getElementById('bulkActionsBtn');
+    if (bulkActionsBtn) {
+        const rect = bulkActionsBtn.getBoundingClientRect();
+        menu.style.cssText = `
+            position: fixed;
+            top: ${rect.bottom + 8}px;
+            left: ${rect.left}px;
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            z-index: var(--z-dropdown);
+            min-width: 180px;
+            animation: slideDown 0.2s ease-out;
+        `;
+    }
+    
+    document.body.appendChild(menu);
+    
+    // Close menu when clicking outside
+    setTimeout(() => {
+        document.addEventListener('click', function closeMenu(e) {
+            if (!menu.contains(e.target) && e.target !== bulkActionsBtn) {
+                menu.remove();
+                document.removeEventListener('click', closeMenu);
+            }
+        });
+    }, 100);
+}
+
+// Bulk delete items
+function bulkDeleteItems() {
+    const checkedBoxes = document.querySelectorAll('#itemsTableBody input[type="checkbox"]:checked');
+    const itemIds = Array.from(checkedBoxes).map(cb => parseInt(cb.getAttribute('data-item-id')));
+    
+    if (itemIds.length === 0) {
+        if (window.CanBeFound) {
+            window.CanBeFound.showNotification('Please select items to delete', 'warning');
+        }
+        return;
+    }
+    
+    if (confirm(`Are you sure you want to delete ${itemIds.length} item(s)?`)) {
+        // Remove items from array
+        adminState.items = adminState.items.filter(item => !itemIds.includes(item.id));
+        
+        // Refresh table
+        loadItemsTable();
+        
+        // Clear selections
+        const selectAllCheckbox = document.getElementById('selectAll');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = false;
+        }
+        
+        if (window.CanBeFound) {
+            window.CanBeFound.showNotification(`${itemIds.length} item(s) deleted successfully`, 'success');
+        }
+    }
+}
+
+// Export selected items
+function exportSelectedItems() {
+    const checkedBoxes = document.querySelectorAll('#itemsTableBody input[type="checkbox"]:checked');
+    const itemIds = Array.from(checkedBoxes).map(cb => parseInt(cb.getAttribute('data-item-id')));
+    
+    if (itemIds.length === 0) {
+        if (window.CanBeFound) {
+            window.CanBeFound.showNotification('Please select items to export', 'warning');
+        }
+        return;
+    }
+    
+    const selectedItems = adminState.items.filter(item => itemIds.includes(item.id));
+    
+    // Create CSV content
+    const csvContent = [
+        ['ID', 'Name', 'Category', 'Status', 'Approved', 'Date Reported', 'Location', 'Reported By'],
+        ...selectedItems.map(item => [
+            item.id,
+            item.name,
+            item.category,
+            item.status,
+            item.approved ? 'Yes' : 'No',
+            item.dateReported,
+            item.location,
+            item.reportedBy
+        ])
+    ].map(row => row.join(',')).join('\n');
+    
+    // Download CSV
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `items_export_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    if (window.CanBeFound) {
+        window.CanBeFound.showNotification(`${itemIds.length} item(s) exported successfully`, 'success');
+    }
 }
 
 // Load admin data
@@ -158,6 +308,7 @@ function generateMockAdminData() {
             name: 'iPhone 13 Pro',
             category: 'Electronics',
             status: 'Lost',
+            approved: false,
             dateReported: '2025-01-15',
             location: 'Library',
             reportedBy: 'John Doe'
@@ -167,6 +318,7 @@ function generateMockAdminData() {
             name: 'Black Backpack',
             category: 'Bags',
             status: 'Found',
+            approved: true,
             dateReported: '2025-01-14',
             location: 'Cafeteria',
             reportedBy: 'Jane Smith'
@@ -176,9 +328,30 @@ function generateMockAdminData() {
             name: 'Silver Watch',
             category: 'Jewelry',
             status: 'Claimed',
+            approved: true,
             dateReported: '2025-01-13',
             location: 'Gymnasium',
             reportedBy: 'Mike Johnson'
+        },
+        {
+            id: 4,
+            name: 'Blue Notebook',
+            category: 'Books',
+            status: 'Lost',
+            approved: false,
+            dateReported: '2025-01-12',
+            location: 'Classroom',
+            reportedBy: 'Sarah Wilson'
+        },
+        {
+            id: 5,
+            name: 'Red Jacket',
+            category: 'Clothing',
+            status: 'Found',
+            approved: true,
+            dateReported: '2025-01-11',
+            location: 'Auditorium',
+            reportedBy: 'Tom Brown'
         }
     ];
     
@@ -342,12 +515,13 @@ function loadItemsTable() {
             <td>${item.name}</td>
             <td>${item.category}</td>
             <td><span class="status-badge ${item.status.toLowerCase()}">${item.status}</span></td>
+            <td><span class="status-badge ${item.approved ? 'approved' : 'pending'}">${item.approved ? 'Approved' : 'Pending'}</span></td>
             <td>${formatDate(item.dateReported)}</td>
             <td>${item.location}</td>
             <td>
                 <div class="table-actions">
                     <button class="action-btn edit" onclick="editItem(${item.id})" title="Edit">✏️</button>
-                    <button class="action-btn approve" onclick="approveItem(${item.id})" title="Approve">✅</button>
+                    <button class="action-btn approve" onclick="approveItem(${item.id})" title="${item.approved ? 'Approved' : 'Approve'}" ${item.approved ? 'disabled' : ''}>✅</button>
                     <button class="action-btn delete" onclick="deleteItem(${item.id})" title="Delete">🗑️</button>
                 </div>
             </td>
@@ -493,18 +667,82 @@ function editItem(itemId) {
 }
 
 function approveItem(itemId) {
-    console.log('Approving item:', itemId);
-    if (window.CanBeFound) {
-        window.CanBeFound.showNotification('Item approved successfully', 'success');
+    const item = adminState.items.find(i => i.id === itemId);
+    if (!item) return;
+    
+    if (item.approved) {
+        if (window.CanBeFound) {
+            window.CanBeFound.showNotification('Item is already approved', 'info');
+        }
+        return;
     }
+    
+    // Update item status
+    item.approved = true;
+    
+    // Refresh table
+    loadItemsTable();
+    
+    if (window.CanBeFound) {
+        window.CanBeFound.showNotification(`${item.name} has been approved and is now visible to users`, 'success');
+    }
+    
+    console.log('Item approved:', itemId);
 }
 
 function deleteItem(itemId) {
     if (confirm('Are you sure you want to delete this item?')) {
-        console.log('Deleting item:', itemId);
-        if (window.CanBeFound) {
-            window.CanBeFound.showNotification('Item deleted successfully', 'success');
+        // Remove item from array
+        const itemIndex = adminState.items.findIndex(i => i.id === itemId);
+        if (itemIndex > -1) {
+            const item = adminState.items[itemIndex];
+            adminState.items.splice(itemIndex, 1);
+            
+            // Refresh table
+            loadItemsTable();
+            
+            if (window.CanBeFound) {
+                window.CanBeFound.showNotification(`${item.name} has been deleted`, 'success');
+            }
         }
+        
+        console.log('Item deleted:', itemId);
+    }
+}
+
+// Bulk approve items
+function bulkApproveItems() {
+    const checkedBoxes = document.querySelectorAll('#itemsTableBody input[type="checkbox"]:checked');
+    const itemIds = Array.from(checkedBoxes).map(cb => parseInt(cb.getAttribute('data-item-id')));
+    
+    if (itemIds.length === 0) {
+        if (window.CanBeFound) {
+            window.CanBeFound.showNotification('Please select items to approve', 'warning');
+        }
+        return;
+    }
+    
+    // Approve selected items
+    let approvedCount = 0;
+    itemIds.forEach(id => {
+        const item = adminState.items.find(i => i.id === id);
+        if (item && !item.approved) {
+            item.approved = true;
+            approvedCount++;
+        }
+    });
+    
+    // Refresh table
+    loadItemsTable();
+    
+    // Clear selections
+    const selectAllCheckbox = document.getElementById('selectAll');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.checked = false;
+    }
+    
+    if (window.CanBeFound) {
+        window.CanBeFound.showNotification(`${approvedCount} item(s) approved successfully`, 'success');
     }
 }
 
@@ -573,6 +811,9 @@ window.AdminManager = {
     editItem,
     approveItem,
     deleteItem,
+    bulkApproveItems,
+    bulkDeleteItems,
+    exportSelectedItems,
     reviewClaim,
     contactClaimant,
     editAuction,
