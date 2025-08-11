@@ -2,6 +2,8 @@ import { config } from '@keystone-6/core';
 import { lists } from './schema';
 import { withAuth, session } from './auth';
 import { seedDatabase } from './seed-data';
+import express from 'express';
+import cors from 'cors';
 
 export default withAuth(
   config({
@@ -18,6 +20,23 @@ export default withAuth(
     },
     lists,
     session,
+    extendExpressApp: (app) => {
+      // Enable CORS for all routes
+      app.use(cors({
+        origin: [
+          process.env.FRONTEND_URL || 'http://localhost:5173',
+          'http://127.0.0.1:5173',
+          'http://localhost:3000',
+        ],
+        credentials: true,
+      }));
+      
+      // Parse JSON bodies
+      app.use(express.json());
+      
+      // REST API endpoints
+      app.use('/api/rest', require('./rest-api'));
+    },
     server: {
       cors: {
         origin: [

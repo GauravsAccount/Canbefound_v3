@@ -293,30 +293,60 @@ function generateMockData() {
 
 // Perform search
 function performSearch() {
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchState.query = searchInput.value.trim();
-    }
+    performRealSearch();
+}
+
+// Perform real search using API
+async function performRealSearch() {
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchState.query = searchInput.value.trim();
+  }
+  
+  // Update filters
+  updateFilters();
+  
+  // Show loading state
+  showLoadingState();
+  
+  try {
+    // Get filter values
+    const filters = {
+      search: searchState.query,
+      category: searchState.filters.category,
+      location: searchState.filters.location,
+      status: searchState.filters.status,
+      limit: searchState.itemsPerPage,
+      offset: (searchState.currentPage - 1) * searchState.itemsPerPage,
+    };
     
-    // Update filters
-    updateFilters();
+    // Remove empty filters
+    Object.keys(filters).forEach(key => {
+      if (!filters[key]) {
+        delete filters[key];
+      }
+    });
     
-    // Show loading state
-    showLoadingState();
+    const items = await window.API.getAllItems(filters);
     
-    // Simulate API delay
-    setTimeout(() => {
-        const filteredItems = filterItems();
-        const sortedItems = sortItems(filteredItems);
-        const paginatedItems = paginateItems(sortedItems);
-        
-        displayItems(paginatedItems);
-        updateResultsInfo(filteredItems.length);
-        
-        // Update URL
-        updateURL();
-        
-    }, 500);
+    // Sort items locally
+    const sortedItems = sortItems(items);
+    
+    // Display items
+    displayItems(sortedItems);
+    updateResultsInfo(sortedItems.length);
+    
+    // Update URL
+    updateURL();
+    
+  } catch (error) {
+    console.error('Search failed:', error);
+    showErrorMessage('Search failed. Please try again.');
+    
+    // Hide loading state
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    if (loadingSpinner) loadingSpinner.style.display = 'none';
+  }
 }
 
 // Filter items
@@ -608,7 +638,7 @@ function createItemDetailHTML(item) {
 
 // Claim item
 function claimItem(itemId) {
-    if (!window.CanBeFound?.isLoggedIn()) {
+    if (!window.Auth?.isLoggedIn()) {
         window.ModalManager?.openModal('loginModal');
         return;
     }

@@ -111,14 +111,47 @@ function initializeLoadMore() {
 
 // Load auction data
 function loadAuctionData() {
-    // Generate mock auction data
-    generateMockAuctions();
-    
-    // Display initial auctions
-    filterAndDisplayAuctions();
+    // Load real auction data
+    loadRealAuctionData();
     
     // Start auction timers
     startAuctionTimers();
+}
+
+// Load real auction data from API
+async function loadRealAuctionData() {
+    try {
+        const auctions = await window.API.getAuctions();
+        
+        // Transform API data to match expected format
+        auctionState.auctions = auctions.map(auction => ({
+            id: auction.id,
+            title: auction.title || auction.item?.itemName || 'Untitled Item',
+            category: auction.item?.category || 'other',
+            description: auction.description || auction.item?.description || '',
+            image: auction.item?.photo?.url || 'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=400',
+            startingPrice: auction.startingPrice / 100, // Convert cents to dollars
+            currentBid: (auction.currentBid || auction.startingPrice) / 100,
+            bidCount: auction.bidCount || 0,
+            endTime: new Date(auction.endTime),
+            status: auction.status === 'active' ? 'active' : auction.status,
+            location: auction.item?.location || 'Unknown'
+        }));
+        
+        // Display auctions
+        filterAndDisplayAuctions();
+        
+    } catch (error) {
+        console.error('Failed to load auction data:', error);
+        
+        // Fallback to mock data
+        generateMockAuctions();
+        filterAndDisplayAuctions();
+        
+        if (window.CanBeFound) {
+            window.CanBeFound.showNotification('Using demo auction data', 'info');
+        }
+    }
 }
 
 // Generate mock auction data
@@ -439,7 +472,7 @@ function initializeBidModal() {
 
 // Open bid modal
 function openBidModal(auction) {
-    if (!window.CanBeFound?.isLoggedIn()) {
+    if (!window.Auth?.isLoggedIn()) {
         window.ModalManager?.openModal('loginModal');
         return;
     }

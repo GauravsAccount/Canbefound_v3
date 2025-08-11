@@ -34,6 +34,9 @@ function initializeModals() {
     // Initialize login form
     initializeLoginForm();
     
+    // Initialize signup form
+    initializeSignupForm();
+    
     console.log('Modal system initialized');
 }
 
@@ -155,60 +158,21 @@ function closeAllModals() {
 // Initialize login form
 function initializeLoginForm() {
     const loginForm = document.getElementById('loginForm');
-    if (!loginForm) return;
-    
-    loginForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        handleLogin();
-    });
+    if (loginForm && !loginForm.hasAttribute('data-auth-handled')) {
+        loginForm.setAttribute('data-auth-handled', 'true');
+        // Login handling is now in auth.js
+    }
 }
 
-// Handle login
-function handleLogin() {
-    const collegeId = document.getElementById('collegeId').value;
-    const password = document.getElementById('password').value;
-    
-    // Basic validation
-    if (!collegeId || !password) {
-        showFormError('Please fill in all fields');
-        return;
+// Initialize signup form
+function initializeSignupForm() {
+    const signupForm = document.getElementById('signupForm');
+    if (signupForm && !signupForm.hasAttribute('data-auth-handled')) {
+        signupForm.setAttribute('data-auth-handled', 'true');
+        // Signup handling is now in auth.js
     }
-    
-    // Show loading state
-    const submitBtn = document.querySelector('#loginForm button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    submitBtn.textContent = 'Logging in...';
-    submitBtn.disabled = true;
-    
-    // Simulate API call
-    setTimeout(() => {
-        // Mock successful login
-        //const userData = {
-          //  id: collegeId,
-            //name: 'John Doe',
-            //email: `${collegeId}@college.edu`,
-            //role: 'student'
-        //};
-        
-        // Store auth data
-        localStorage.setItem('authToken', 'mock-token-' + Date.now());
-        localStorage.setItem('currentUser', JSON.stringify(userData));
-        
-        // Close modal
-        closeModal('loginModal');
-        
-        // Show success message
-        if (window.CanBeFound) {
-            window.CanBeFound.showNotification('Login successful! Welcome back.', 'success');
-        }
-        
-        // Reload page to update UI
-        setTimeout(() => {
-            window.location.reload();
-        }, 1000);
-        
-    }, 1500);
 }
+
 
 // Show form error
 function showFormError(message) {

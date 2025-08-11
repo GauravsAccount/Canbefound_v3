@@ -20,14 +20,12 @@ function overrideFormSubmissions() {
   // Lost item form
   const lostItemForm = document.getElementById('lostItemForm');
   if (lostItemForm) {
-    lostItemForm.removeEventListener('submit', window.FormManager?.submitForm);
     lostItemForm.addEventListener('submit', handleLostItemSubmission);
   }
 
   // Found item form
   const foundItemForm = document.getElementById('foundItemForm');
   if (foundItemForm) {
-    foundItemForm.removeEventListener('submit', handleFormSubmission);
     foundItemForm.addEventListener('submit', handleFoundItemSubmission);
   }
 
@@ -35,13 +33,6 @@ function overrideFormSubmissions() {
   const contactForm = document.getElementById('contactForm');
   if (contactForm) {
     contactForm.addEventListener('submit', handleContactFormSubmission);
-  }
-
-  // Login form
-  const loginForm = document.getElementById('loginForm');
-  if (loginForm) {
-    loginForm.removeEventListener('submit', handleLogin);
-    loginForm.addEventListener('submit', handleRealLogin);
   }
 }
 
@@ -69,7 +60,7 @@ async function handleLostItemSubmission(e) {
     // Submit to API
     const result = await window.API.submitLostItem(data);
     
-    if (result.createLostItem) {
+    if (result.success) {
       // Show success message
       showSuccessMessage('Lost item report submitted successfully!');
       
@@ -115,7 +106,7 @@ async function handleFoundItemSubmission(e) {
     // Submit to API
     const result = await window.API.submitFoundItem(data);
     
-    if (result.createFoundItem) {
+    if (result.success) {
       // Show success message
       showSuccessMessage('Found item report submitted successfully!');
       
@@ -158,7 +149,7 @@ async function handleContactFormSubmission(e) {
     // Submit to API
     const result = await window.API.submitContactMessage(data);
     
-    if (result.createContactMessage) {
+    if (result.success) {
       // Show success message
       if (window.CanBeFound) {
         window.CanBeFound.showNotification('Message sent successfully! We\'ll get back to you soon.', 'success');
@@ -171,59 +162,6 @@ async function handleContactFormSubmission(e) {
   } catch (error) {
     console.error('Failed to submit contact message:', error);
     showErrorMessage('Failed to send message. Please try again.');
-  } finally {
-    submitBtn.textContent = originalText;
-    submitBtn.disabled = false;
-  }
-}
-
-// Handle real login
-async function handleRealLogin(e) {
-  e.preventDefault();
-  
-  const form = e.target;
-  const collegeId = form.collegeId.value;
-  const password = form.password.value;
-  const submitBtn = form.querySelector('button[type="submit"]');
-  const originalText = submitBtn.textContent;
-  
-  // Show loading state
-  submitBtn.textContent = 'Logging in...';
-  submitBtn.disabled = true;
-  
-  try {
-    // Convert college ID to email format for API
-    const email = `${collegeId}@college.edu`;
-    
-    const result = await window.API.login(email, password);
-    
-    if (result.item) {
-      // Store auth data
-      localStorage.setItem('authToken', result.sessionToken || 'authenticated');
-      localStorage.setItem('currentUser', JSON.stringify(result.item));
-      
-      // Close modal
-      if (window.ModalManager) {
-        window.ModalManager.closeModal('loginModal');
-      }
-      
-      // Show success message
-      if (window.CanBeFound) {
-        window.CanBeFound.showNotification('Login successful! Welcome back.', 'success');
-      }
-      
-      // Reload page to update UI
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-      
-    } else {
-      showLoginError(result.message || 'Invalid credentials');
-    }
-    
-  } catch (error) {
-    console.error('Login failed:', error);
-    showLoginError('Login failed. Please check your credentials.');
   } finally {
     submitBtn.textContent = originalText;
     submitBtn.disabled = false;
@@ -364,50 +302,8 @@ function animateCounterToValue(element, targetValue) {
 
 // Override authentication functions
 function overrideAuthenticationFunctions() {
-  // Override checkAuthStatus
-  window.checkAuthStatus = checkRealAuthStatus;
-  
-  // Override logout
-  window.logout = performRealLogout;
-}
-
-// Check real authentication status
-async function checkRealAuthStatus() {
-  try {
-    const user = await window.API.getCurrentUser();
-    
-    if (user) {
-      isLoggedIn = true;
-      currentUser = user;
-      localStorage.setItem('currentUser', JSON.stringify(user));
-      updateAuthUI();
-    } else {
-      isLoggedIn = false;
-      currentUser = null;
-      localStorage.removeItem('currentUser');
-      localStorage.removeItem('authToken');
-    }
-    
-  } catch (error) {
-    console.error('Auth check failed:', error);
-    isLoggedIn = false;
-    currentUser = null;
-  }
-}
-
-// Perform real logout
-async function performRealLogout() {
-  try {
-    await window.API.logout();
-  } catch (error) {
-    console.error('Logout failed:', error);
-  } finally {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('currentUser');
-    isLoggedIn = false;
-    currentUser = null;
-    window.location.reload();
-  }
+  // Auth functions are now handled by auth.js
+  console.log('Authentication functions delegated to auth.js');
 }
 
 // Utility functions
@@ -468,4 +364,6 @@ if (document.querySelector('.stat-number[data-count]')) {
 }
 
 // Check authentication status on page load
-checkRealAuthStatus();
+if (window.Auth) {
+  window.Auth.checkAuthStatus();
+}
