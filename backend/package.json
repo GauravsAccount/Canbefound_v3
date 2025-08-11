@@ -1,0 +1,27 @@
+{
+  "name": "canbefound-backend",
+  "version": "1.0.0",
+  "description": "Backend API for CanBeFound.com Lost and Found Platform",
+  "main": "index.js",
+  "scripts": {
+    "dev": "keystone dev",
+    "start": "keystone start",
+    "build": "keystone build",
+    "postinstall": "keystone build --frozen"
+  },
+  "keywords": [
+    "lost-and-found",
+    "keystone",
+    "college",
+    "auction"
+  ],
+  "author": "CanBeFound.com",
+  "license": "ISC",
+  "dependencies": {
+    "@keystone-6/auth": "^8.1.0"
+  },
+  "devDependencies": {
+    "@types/connect": "^3.4.38",
+    "@types/minimist": "^1.2.5"
+  }
+}
